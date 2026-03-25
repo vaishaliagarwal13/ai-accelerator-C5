@@ -9,9 +9,15 @@ Key Teaching Points:
 """
 
 import streamlit as st
+from openai import OpenAI
 import time
 import random
 from datetime import datetime
+
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=st.secrets["OPENROUTER_API_KEY"]
+)
 
 # Page configuration
 st.set_page_config(
@@ -203,12 +209,36 @@ if prompt := st.chat_input(f"Message {assistant_name}..."):
         with st.spinner(f"{assistant_name} is thinking..."):
             time.sleep(random.uniform(0.5, 2.0))  # Realistic delay
 
-        # Generate response
-        response = generate_response(prompt)
-        st.write(response)
+        # # Generate response
+        # response = generate_response(prompt)
+        # st.write(response)
 
-        # Add assistant response to history
-        add_message("assistant", response)
+        # # Add assistant response to history
+        # add_message("assistant", response)
+
+        response_text = ""
+
+        response = client.chat.completions.create(
+            model="openai/gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant. Answer clearly and directly."}
+            ] + [
+                {"role": msg["role"], "content": msg["content"]}
+                for msg in st.session_state.messages
+            ],
+            stream=True
+        )
+
+        response_placeholder = st.empty()
+
+        for chunk in response:
+            if chunk.choices[0].delta.content:
+                response_text += chunk.choices[0].delta.content
+                response_placeholder.markdown(response_text + "▌")
+
+        response_placeholder.markdown(response_text)
+
+        add_message("assistant", response_text)
 
         # Rerun to update the display
         st.rerun()
