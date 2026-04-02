@@ -10,14 +10,7 @@ from openai import OpenAI
 st.set_page_config(page_title="My ChatBot", page_icon="🤖")
 
 # Initialize the OpenAI client with OpenRouter
-if "OPENROUTER_API_KEY" in st.secrets:
-    api_key = st.secrets["OPENROUTER_API_KEY"]
-else:
-    api_key = st.sidebar.text_input("Enter OpenRouter API Key", type="password")
-
-if not api_key:
-    st.warning("Please enter your OpenRouter API key to continue.")
-    st.stop()
+api_key = "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"
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
@@ -58,7 +51,7 @@ if prompt := st.chat_input("What would you like to know?"):
     with st.chat_message("assistant"):
         try:
             response = client.chat.completions.create(
-                model="mistralai/mistral-7b-instruct:free",  # safer free model
+                model="openai/gpt-4o-mini",  # safer free model
                 messages=st.session_state.messages,
                 stream=True,
                 extra_headers={
